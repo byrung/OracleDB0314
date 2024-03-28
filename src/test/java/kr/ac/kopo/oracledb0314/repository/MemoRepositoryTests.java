@@ -7,8 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -97,6 +101,74 @@ public class MemoRepositoryTests {
         for(Memo memo : result.getContent()){
             System.out.println(memo);
         }
+
+        System.out.println("==============================");
+        System.out.println("Total Pages: " + result.getTotalPages());
+        System.out.println("Total Count: " + result.getTotalElements());
+        System.out.println("Total Number: " + result.getNumber());
+        System.out.println("Total Size: " + result.getSize());
+        System.out.println("Has next page: " + result.hasNext());
+        System.out.println("Is first page: " + result.isFirst());
     }
 
+    @Test
+    public void testSort() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("mno").descending());
+        Page<Memo> result = memoRepository.findAll(pageable);
+
+        result.get().forEach(memo ->{
+            System.out.println("number:"+memo.getMno() + ", content : " + memo.getMemoText());
+        });
+    }
+
+
+    @Test
+    public void testQueryMethod(){
+        List<Memo> result = memoRepository.findByMnoBetweenOrderByMnoDesc(20L, 30L);
+        for (Memo memo : result){
+            System.out.println(memo.toString());
+        }
+    }
+
+    @Test
+    public void testQueryMethod2(){
+        Pageable pageable = PageRequest.of(0,10,Sort.by("mno").descending());
+        Page<Memo> result = memoRepository.findByMnoBetween(20L,60L,pageable);
+
+        for(Memo memo : result){
+            System.out.println(memo.toString());
+        }
+        System.out.println("==============================");
+
+        pageable = PageRequest.of(0,10);
+        result = memoRepository.findByMnoBetween(20L,60L,pageable);
+
+        result.get().forEach(memo->{
+            System.out.println(memo);
+        });
+    }
+
+    @Transactional
+    @Commit
+    @Test
+    public void testQueryMethod3(){
+        memoRepository.deleteMemoByMno(5L);
+        testPagetDefault();
+    }
+
+    @Test
+    public void testQueryAnnotationNative(){
+        List<Memo> result = memoRepository.getNativeResult();
+        for (Memo memo : result){
+            System.out.println(memo);
+        }
+    }
+
+    @Test
+    public void testQueryAnnotationNative2(){
+        List<Object[]> result = memoRepository.getNativeResult2();
+        for (Object[] memoObj : result){
+            System.out.println(memoObj[1]);
+        }
+    }
 }
